@@ -1,0 +1,22 @@
+name: Errors
+
+inputs:
+  - a
+  - b: unkown
+
+nodes:
+  - id: one_input_missing
+    type: nodes.Adder
+    bind:
+      a: inputs.a
+
+  - id: two_inputs_missing
+    type: nodes.Adder
+    bind:
+      c: inputs.a
+
+  - id: has_2_error_outputs
+    type: nodes.Invalid2Errors
+
+  - id: not_found
+    type: nodes.DoesNotExist

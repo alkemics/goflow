@@ -1,0 +1,10 @@
+type: CyclesOK
+nodes:
+  - id: make_slice
+    type: nodes.SliceMaker
+
+  - id: print
+    type: nodes.Printer
+    bind:
+      values:
+        - make_slice.list

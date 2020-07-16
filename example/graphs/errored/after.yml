@@ -1,0 +1,6 @@
+name: After
+
+nodes:
+  - id: add
+    after:
+      does: not work

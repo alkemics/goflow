@@ -1,0 +1,5 @@
+name: Bad
+
+inpu:
+  a: 1
+  - toto

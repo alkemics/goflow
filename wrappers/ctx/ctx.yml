@@ -1,0 +1,13 @@
+name: Ctx
+package: main
+
+nodes:
+  - id: make_slice
+    type: nodes.SliceMaker
+
+  - id: print
+    type: nodes.PrinterCtx
+    bind:
+      values:
+        - make_slice.list
+

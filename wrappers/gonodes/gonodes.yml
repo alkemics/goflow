@@ -1,0 +1,17 @@
+name: GoNodes
+package: main
+
+nodes:
+  - id: make_slice
+    type: nodes.SliceMaker
+
+  - id: add_slice
+    type: nodes.IntReducer.Add
+    bind:
+      list: make_slice.list
+
+  - id: print
+    type: nodes.Printer
+    bind:
+      values:
+        - add_slice.sum

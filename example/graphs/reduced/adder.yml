@@ -1,0 +1,17 @@
+name: Adder
+package: reduced
+
+inputs:
+  - a: single
+  - b: single
+
+nodes:
+  - id: adder
+    type: nodes.IntReducer.Add
+    bind:
+      list:
+        - inputs.a
+        - inputs.b
+
+outputs:
+  sum: adder.sum

@@ -1,0 +1,24 @@
+name: Affiner
+package: reduced
+
+inputs:
+  - a: single
+  - b
+  - x: single
+
+nodes:
+  - id: compute_ax
+    type: nodes.IntReducer.Multiply
+    bind:
+      list:
+        - inputs.a
+        - inputs.x
+
+  - id: add_b
+    type: reduced.Adder
+    bind:
+      a: compute_ax.product
+      b: inputs.b
+
+outputs:
+  result: add_b.sum

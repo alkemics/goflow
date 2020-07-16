@@ -1,0 +1,15 @@
+name: Mockingjay
+package: main
+inputs:
+  - a
+  - b
+
+nodes:
+  - id: add
+    type: nodes.Adder
+    bind:
+      a: inputs.a
+      b: inputs.b
+
+outputs:
+  sum: add.sum
