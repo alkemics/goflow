@@ -7,23 +7,22 @@ import (
 
 	"github.com/alkemics/goflow"
 	"github.com/alkemics/goflow/gfutil"
-	"github.com/alkemics/lib-go/v9/sets"
 )
 
-var numberTypes = sets.NewStrings(
-	"int",
-	"int8",
-	"int16",
-	"int32",
-	"int64",
-	"uint",
-	"uint8",
-	"uint16",
-	"uint32",
-	"uint64",
-	"float32",
-	"float64",
-)
+func isNumberType(typ string) bool {
+	return typ == "int" ||
+		typ == "int8" ||
+		typ == "int16" ||
+		typ == "int32" ||
+		typ == "int64" ||
+		typ == "uint" ||
+		typ == "uint8" ||
+		typ == "uint16" ||
+		typ == "uint32" ||
+		typ == "uint64" ||
+		typ == "float32" ||
+		typ == "float64"
+}
 
 func isEmptyInterface(s string) bool {
 	return s == "interface{}" || s == "[]interface{}"
@@ -112,24 +111,27 @@ func combineTypes(types []string) []string {
 		return nil
 	}
 
-	combined := sets.NewStrings(types...)
-
-	// If we have @any and any other element(s), we keep the other element(s)
-	if combined.Contains("@any") && combined.Len() > 1 {
-		combined.Remove("@any")
+	// combined := sets.NewStrings(types...)
+	combined := make(map[string]struct{})
+	for _, typ := range types {
+		combined[typ] = struct{}{}
 	}
 
-	flat := combined.ToList()
-	current := flat[0]
-	combined = sets.NewStrings()
-	for _, next := range flat[1:] {
+	// If we have @any and any other element(s), we keep the other element(s)
+	if _, ok := combined["@any"]; ok && len(combined) > 1 {
+		delete(combined, "@any")
+	}
+
+	current := ""
+	unresolved := make(map[string]struct{})
+	for next := range combined {
 		if current == "" {
 			current = next
 			continue
 		}
 
 		// We do not need to check for current == next because
-		// flat comes from a sets.Strings!
+		// we iterate on a map
 
 		cc := trimOption(current)
 		nn := trimOption(next)
@@ -172,11 +174,11 @@ func combineTypes(types []string) []string {
 
 		// Check the additional directives
 		// @number directive: if the other type is a number, all is good!
-		if cc == "@number" && numberTypes.Contains(trimSlice(nn)) {
+		if cc == "@number" && isNumberType(trimSlice(nn)) {
 			current = trimSlice(nn)
 			continue
 		}
-		if nn == "@number" && numberTypes.Contains(trimSlice(cc)) {
+		if nn == "@number" && isNumberType(trimSlice(cc)) {
 			current = trimSlice(cc)
 			continue
 		}
@@ -196,7 +198,7 @@ func combineTypes(types []string) []string {
 			continue
 		}
 
-		// ?bool is basically with everything
+		// ?bool is basically matching with everything
 		if current == "?bool" {
 			current = next
 			continue
@@ -207,18 +209,23 @@ func combineTypes(types []string) []string {
 
 		// We could not match the types so we add the current one
 		// as we need more resolution/information to match the types
-		combined.Add(current)
+		unresolved[current] = struct{}{}
 		current = next
 	}
-	combined.Add(current)
+	unresolved[current] = struct{}{}
 
-	if combined.Len() == 1 {
+	unresolvedList := make([]string, 0, len(unresolved))
+	for k := range unresolved {
+		unresolvedList = append(unresolvedList, k)
+	}
+
+	if len(unresolvedList) == 1 {
 		// We have only one element, let's resolve it!
-		typ := combined.ToList()[0]
+		typ := unresolvedList[0]
 		return []string{trimOption(typ)}
 	}
 
-	return combined.ToList()
+	return unresolvedList
 }
 
 func sortNodesByExecutionOrder(nodes []goflow.NodeRenderer) []goflow.NodeRenderer {

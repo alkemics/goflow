@@ -8,7 +8,6 @@ import (
 
 	"github.com/alkemics/goflow"
 	"github.com/alkemics/goflow/gfutil/gfgo"
-	"github.com/alkemics/lib-go/v9/errors"
 )
 
 func loadConstants(constantPackages []string) ([]constant, error) {
@@ -42,11 +41,10 @@ func loadConstants(constantPackages []string) ([]constant, error) {
 
 			typ, _, err := gfgo.ParseType(v.Type())
 			if err != nil {
-				return nil, errors.New(
-					"could not find type of constant {{constant}}",
-					errors.WithField("constant", k.Name),
-					errors.WithCause(err),
-				)
+				return nil, TypeError{
+					Name: k.Name,
+					Err:  err,
+				}
 			}
 			constants = append(constants, constant{
 				name: fmt.Sprintf("%s.%s", pkg.Name, k.Name),

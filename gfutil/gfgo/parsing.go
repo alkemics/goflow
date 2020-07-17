@@ -1,12 +1,10 @@
 package gfgo
 
 import (
-	"fmt"
 	"go/types"
 	"strings"
 
 	"github.com/alkemics/goflow"
-	"github.com/alkemics/lib-go/v9/errors"
 )
 
 func ParseType(typ types.Type) (string, []goflow.Import, error) {
@@ -79,7 +77,7 @@ func extractImports(typ types.Type) ([]goflow.Import, error) {
 		imports := append(keyImports, elemImports...)
 		return imports, nil
 	}
-	return nil, errors.New("could no find type of {{type}}", errors.WithField("type", fmt.Sprintf("%T", typ)))
+	return nil, TypeError{Type: typ}
 }
 
 func ParseSignature(signature *types.Signature) (imports []goflow.Import, inputs, outputs []goflow.Field, err error) {
@@ -89,7 +87,7 @@ func ParseSignature(signature *types.Signature) (imports []goflow.Import, inputs
 	if signature.Params() != nil {
 		imps, inputs, err = toFields(signature.Params())
 		if err != nil {
-			return nil, nil, nil, errors.New("error reading inputs", errors.WithCause(err))
+			return nil, nil, nil, err
 		}
 
 		imports = append(imports, imps...)
@@ -99,7 +97,7 @@ func ParseSignature(signature *types.Signature) (imports []goflow.Import, inputs
 	if signature.Results() != nil {
 		imps, outputs, err = toFields(signature.Results())
 		if err != nil {
-			return nil, nil, nil, errors.New("error reading outputs", errors.WithCause(err))
+			return nil, nil, nil, err
 		}
 
 		imports = append(imports, imps...)
@@ -115,11 +113,10 @@ func toFields(vars *types.Tuple) ([]goflow.Import, []goflow.Field, error) {
 		v := vars.At(i)
 		typ, imports, err := ParseType(v.Type())
 		if err != nil {
-			return nil, nil, errors.New(
-				"could not read type of input {{input}}",
-				errors.WithField("input", fmt.Sprintf("#%d", i)),
-				errors.WithCause(err),
-			)
+			return nil, nil, InputParsingError{
+				InputIndex: i,
+				Err:        err,
+			}
 		}
 
 		fields[i] = goflow.Field{
