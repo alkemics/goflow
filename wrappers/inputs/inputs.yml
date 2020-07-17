@@ -1,0 +1,35 @@
+name: Inputs
+package: main
+
+inputs:
+  - a: single
+  - b
+  - no?
+
+nodes:
+  - id: make_slice
+    type: nodes.SliceMaker
+
+  - id: add
+    type: nodes.IntAggregator
+    bind:
+      list:
+        - inputs.a
+        - inputs.b
+        - make_slice.list
+      reducer: functions.IntSum
+
+  - id: print
+    type: nodes.PrinterCtx
+    bind:
+      values:
+        - '"the result should be 12"'
+        - add.result
+
+  - id: do_not_print
+    type: nodes.Printer
+    if:
+      - inputs.no
+    bind:
+      values:
+        - '"this is not printed"'

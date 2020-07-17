@@ -1,0 +1,15 @@
+name: Adder
+
+inputs:
+  - a
+  - b
+
+nodes:
+  - id: adder
+    type: nodes.Adder
+    bind:
+      a: inputs.a
+      b: inputs.b
+
+outputs:
+  sum: adder.sum

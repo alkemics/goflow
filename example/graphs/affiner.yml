@@ -1,0 +1,22 @@
+name: Affiner
+
+inputs:
+  - a
+  - b
+  - x
+
+nodes:
+  - id: compute_ax
+    type: nodes.Multiplier
+    bind:
+      a: inputs.a
+      b: inputs.x
+
+  - id: add_b
+    type: graphs.Adder
+    bind:
+      a: compute_ax.product
+      b: inputs.b
+
+outputs:
+  result: add_b.sum

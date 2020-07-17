@@ -1,0 +1,18 @@
+type: CyclesKO
+nodes:
+  - id: make_slice
+    type: nodes.SliceMaker
+    after:
+      - print1
+
+  - id: print1
+    type: nodes.Printer
+    bind:
+      values:
+        - make_slice.list
+
+  - id: print2
+    type: nodes.Printer
+    bind:
+      values:
+        - '"some value"'

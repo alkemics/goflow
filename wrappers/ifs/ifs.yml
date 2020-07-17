@@ -1,0 +1,33 @@
+name: Ifs
+package: main
+
+nodes:
+  - id: print_void
+    type: nodes.Printer
+    if:
+      - false
+    bind:
+      values:
+        - '"never printed"'
+
+  - id: print_void_again
+    type: nodes.Printer
+    if:
+      - numbers.EmptyIntSlice
+    bind:
+      values:
+        - '"never printed as well"'
+
+  - id: print
+    type: nodes.Printer
+    bind:
+      values:
+        - '"this is printed"'
+
+  - id: print_again
+    type: nodes.Printer
+    if:
+      - not numbers.EmptyIntSlice
+    bind:
+      values:
+        - '"this is printed as well"'

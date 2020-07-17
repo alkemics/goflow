@@ -1,0 +1,6 @@
+type: PreviousKO
+nodes:
+  - id: make_error
+    type: nodes.ErrorGenerator
+    after:
+      - make_slice

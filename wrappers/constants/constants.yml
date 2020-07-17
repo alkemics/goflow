@@ -1,0 +1,35 @@
+name: Constants
+package: main
+
+nodes:
+  - id: add
+    type: nodes.IntAggregator
+    bind:
+      list:
+        - numbers.One
+        - numbers.Two
+        - 3
+      reducer: functions.IntSum
+
+  - id: multiply
+    type: nodes.IntAggregator
+    bind:
+      list:
+        - add.result
+        - 10
+      reducer: functions.IntMultiplication
+
+  - id: print_void
+    type: nodes.ConditionalPrinter
+    bind:
+      print: false
+      values:
+        - '"never printed"'
+
+  - id: print
+    type: nodes.ConditionalPrinter
+    bind:
+      print: true
+      values:
+        - '"the result should be 60"'
+        - multiply.result

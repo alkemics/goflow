@@ -1,0 +1,15 @@
+name: Ouputs
+package: main
+
+nodes:
+  - id: produce_random_int
+    type: nodes.RandomIntProducer
+
+  - id: produce_another_random_int
+    type: nodes.RandomIntProducer
+
+outputs:
+  random_int: produce_random_int.n
+  random_ints:
+    - produce_random_int.n
+    - produce_another_random_int.n

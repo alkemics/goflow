@@ -1,0 +1,20 @@
+name: Bind
+package: main
+
+nodes:
+  - id: make_slice
+    type: nodes.SliceMaker
+
+  - id: add
+    type: nodes.IntAggregator
+    bind:
+      reducer: functions.IntSum
+
+  - id: print
+    type: nodes.Printer
+    bind:
+      values:
+        - '"should print 1, 2, 3 and 0"'
+        - make_slice.list
+        - add.result
+

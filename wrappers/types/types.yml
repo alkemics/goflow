@@ -1,0 +1,60 @@
+name: Types
+package: main
+
+inputs:
+  - a
+  - b
+  - c: single
+  - no?
+
+nodes:
+  - id: make_slice
+    type: nodes.UIntSliceMaker
+
+  - id: add_10
+    type: nodes.UAdd
+    bind:
+      a: inputs.a
+      b: 10
+
+  - id: add
+    type: nodes.UIntAggregator
+    bind:
+      list:
+        - inputs.a
+        - inputs.b
+        - inputs.c
+        - add_10.sum
+        - make_slice.list
+        - numbers.One
+      reducer: functions.UIntSum
+
+  - id: print
+    type: nodes.PrinterCtx
+    bind:
+      values:
+        - '"the result should be 28"'
+        - add.result
+
+  - id: print_pi
+    type: nodes.Printer
+    bind:
+      values:
+        - '"Pi:"'
+        - numbers.Pi
+
+  - id: do_not_print
+    type: nodes.Printer
+    if:
+      - inputs.no
+    bind:
+      values:
+        - '"this is not printed"'
+
+outputs:
+  add: add.result
+  add_10: add_10.sum
+  forwardedInputs:
+    - inputs.a
+    - inputs.b
+    - inputs.c

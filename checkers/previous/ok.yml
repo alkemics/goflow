@@ -1,0 +1,9 @@
+type: PreviousOK
+nodes:
+  - id: make_slice
+    type: nodes.SliceMaker
+
+  - id: make_error
+    type: nodes.ErrorGenerator
+    after:
+      - make_slice
