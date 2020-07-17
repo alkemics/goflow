@@ -31,3 +31,16 @@ func craftPkgError(pkgPath string, errs []packages.Error) PkgError {
 		Err:     goflow.MultiError{Errs: es},
 	}
 }
+
+type TypeError struct {
+	Name string
+	Err  error
+}
+
+func (e TypeError) Error() string {
+	return fmt.Sprintf("could not find type of constant %s: %v", e.Name, e.Err)
+}
+
+func (e TypeError) Unwrap() error {
+	return e.Err
+}

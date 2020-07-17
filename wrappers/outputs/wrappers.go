@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/alkemics/goflow"
-	"github.com/alkemics/lib-go/v9/errors"
 )
 
 func Wrapper(unmarshal func(interface{}) error, graph goflow.GraphRenderer) (goflow.GraphRenderer, error) {
@@ -77,11 +76,9 @@ func NameWrapper(_ func(interface{}) error, graph goflow.GraphRenderer) (goflow.
 		}
 	}
 	if len(errorFieldNames) > 1 {
-		return nil, errors.New(
-			"more than one error output for graph {{name}}: {{error_outputs}}",
-			errors.WithField("name", graph.Name()),
-			errors.WithField("error_outputs", strings.Join(errorFieldNames, ",")),
-		)
+		return nil, TooManyErrorOutputsError{
+			Names: errorFieldNames,
+		}
 	}
 
 	return nameGraphWrapper{

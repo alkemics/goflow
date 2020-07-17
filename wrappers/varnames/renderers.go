@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/alkemics/goflow"
-	"github.com/alkemics/lib-go/v9/sets"
 )
 
 type nodeRenderer struct {
@@ -36,18 +35,30 @@ func (g graphRenderer) Nodes() []goflow.NodeRenderer { return g.nodes }
 type compilableNodeRenderer struct {
 	goflow.NodeRenderer
 
-	nodeIDs sets.Strings
+	nodeIDs map[string]struct{}
 }
 
 func (n compilableNodeRenderer) Previous() []string {
-	inputs := n.NodeRenderer.Inputs()
 	previous := n.NodeRenderer.Previous()
-	previousSet := sets.NewStrings(previous...)
+	previousSet := make(map[string]struct{})
+	for _, p := range previous {
+		previousSet[p] = struct{}{}
+	}
+
+	inputs := n.NodeRenderer.Inputs()
 	for _, f := range inputs {
 		nodeName := strings.SplitN(f.Name, ".", 2)[0]
-		if n.nodeIDs.Contains(nodeName) && previousSet.Add(nodeName) {
-			previous = append(previous, nodeName)
+		if _, ok := n.nodeIDs[nodeName]; !ok {
+			continue
 		}
+
+		if _, ok := previousSet[nodeName]; ok {
+			// If we already know that node, skip it
+			continue
+		}
+
+		previousSet[nodeName] = struct{}{}
+		previous = append(previous, nodeName)
 	}
 	return previous
 }
@@ -75,7 +86,7 @@ func (n compilableNodeRenderer) Outputs() []goflow.Field {
 type compilableGraphRenderer struct {
 	goflow.GraphRenderer
 	nodes   []goflow.NodeRenderer
-	nodeIDs sets.Strings
+	nodeIDs map[string]struct{}
 }
 
 func (g compilableGraphRenderer) Nodes() []goflow.NodeRenderer { return g.nodes }
