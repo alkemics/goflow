@@ -13,25 +13,33 @@ import (
 
 func httpPlayground(pg graphs.Playground) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
-		var in json.RawMessage
-		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
-			_ = json.NewEncoder(w).Encode(map[string]interface{}{
-				"error": err,
-			})
-			return
-		}
+		if r.Method == "POST" {
+			defer r.Body.Close()
+			var in json.RawMessage
+			if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				_ = json.NewEncoder(w).Encode(map[string]interface{}{
+					"error": err,
+				})
+				return
+			}
 
-		name := r.URL.Query().Get("name")
-		out, err := pg.Run(r.Context(), name, &in)
-		if err != nil {
-			_ = json.NewEncoder(w).Encode(map[string]interface{}{
-				"error": err,
-			})
-			return
-		}
+			name := r.URL.Query().Get("name")
+			out, err := pg.Run(r.Context(), name, &in)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				_ = json.NewEncoder(w).Encode(map[string]interface{}{
+					"error": err,
+				})
+				return
+			}
 
-		_ = json.NewEncoder(w).Encode(out)
+			w.WriteHeader(http.StatusOK)
+			_ = json.NewEncoder(w).Encode(out)
+		} else if r.Method == "GET" {
+			w.WriteHeader(http.StatusOK)
+			_ = json.NewEncoder(w).Encode(pg.List())
+		}
 	}
 }
 

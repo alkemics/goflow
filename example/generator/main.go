@@ -42,7 +42,7 @@ func main() {
 	}
 
 	if len(graphNames) == 0 {
-		gns, err := gfutil.FindGraphFileNames("example/graphs")
+		gns, err := gfutil.FindGraphFileNames("graphs")
 		handleErr(err)
 
 		for _, gn := range gns {
@@ -131,7 +131,7 @@ func main() {
 		return n1 <= n2
 	})
 	handleErr(json.NewEncoder(&buf).Encode(nodes))
-	handleErr(ioutil.WriteFile("example/nodes.json", buf.Bytes(), 0o600))
+	handleErr(ioutil.WriteFile("nodes.json", buf.Bytes(), 0o600))
 
 	var graphLoader gfgo.NodeLoader
 	err = graphLoader.Load(
@@ -142,7 +142,7 @@ func main() {
 	buf.Reset()
 
 	graphNodes := graphLoader.All()
-	pgFilename := "example/graphs/playground.go"
+	pgFilename := "graphs/playground.go"
 	goWriter := gfgo.NewWriter(&buf, pgFilename)
 	w := gfgo.DebugWriter{
 		Writer: goWriter,
