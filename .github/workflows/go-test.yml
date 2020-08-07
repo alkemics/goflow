@@ -23,10 +23,14 @@ jobs:
       - name: Get dependencies
         run: go mod download
 
-      - name: golangci-lint
+      - name: Test
+        run: go test -vet=off ./...
+
+      - name: Lint
         uses: golangci/golangci-lint-action@v2
         with:
           version: v1.30
 
-      - name: Test
-        run: go test -vet=off ./...
+      - name: Check diffs
+        # --name-only first for debugging
+        run: git diff --name-only && git diff --quiet
