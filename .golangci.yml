@@ -1,0 +1,13 @@
+run:
+  deadline: 8m
+  build-tags:
+    - codeanalysis
+
+linters:
+  enable:
+    - gosec # (gas) Inspects source code for security problems
+    - nolintlint # Reports ill-formed or insufficient nolint directives
+    - unconvert # Remove unnecessary type conversions
+    - whitespace # Tool for detection of leading and trailing whitespace
+    - gofumpt # Gofumpt checks whether code was gofumpt-ed
+    - prealloc # Finds slice declarations that could potentially be preallocated
