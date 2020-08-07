@@ -15,7 +15,7 @@ func Adder(a, b int) (sum int) { return a + b }
 func Multiplier(a, b int) (product int) { return a * b }
 
 func RandomIntProducer() (n int) {
-	return rand.New(rand.NewSource(time.Now().UnixNano())).Intn(100)
+	return rand.New(rand.NewSource(time.Now().UnixNano())).Intn(100) //nolint:gosec // not really critical
 }
 
 // IntAggregator aggregates `list` using `reducer.

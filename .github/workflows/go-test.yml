@@ -2,28 +2,35 @@ name: Test
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
-
   build:
     name: Test
     runs-on: ubuntu-latest
     steps:
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.14
+        id: go
 
-    - name: Set up Go 1.x
-      uses: actions/setup-go@v2
-      with:
-        go-version: ^1.14
-      id: go
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
 
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
+      - name: Get dependencies
+        run: go mod download
 
-    - name: Get dependencies
-      run: go mod download
+      - name: Test
+        run: go test -vet=off ./...
 
-    - name: Test
-      run: go test -vet=off ./...
+      - name: Lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.30
+
+      - name: Check diffs
+        # --name-only first for debugging
+        run: git diff --name-only && git diff --quiet
