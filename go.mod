@@ -1,15 +1,20 @@
 module github.com/alkemics/goflow
 
-go 1.14
+go 1.17
 
 require (
-	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/google/go-cmp v0.4.1 // indirect
-	github.com/kr/text v0.2.0 // indirect
-	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
-	github.com/stretchr/testify v1.6.1
-	golang.org/x/tools v0.0.0-20200716134326-a8f9df4c9543
-	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
-	gopkg.in/yaml.v2 v2.3.0
-	mvdan.cc/gofumpt v0.0.0-20200513141252-abc0db2c416a
+	github.com/stretchr/testify v1.7.0
+	golang.org/x/tools v0.1.8
+	gopkg.in/yaml.v2 v2.4.0
+	mvdan.cc/gofumpt v0.2.0
+)
+
+require (
+	github.com/davecgh/go-spew v1.1.0 // indirect
+	github.com/google/go-cmp v0.5.6 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	golang.org/x/mod v0.5.1 // indirect
+	golang.org/x/sys v0.0.0-20211102192858-4dd72447c267 // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 )
