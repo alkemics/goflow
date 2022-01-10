@@ -48,7 +48,7 @@ func (w *Writer) Flush() error {
 		return err
 	}
 
-	src, err = format.Source(src, format.Options{})
+	src, err = format.Source(src, format.Options{LangVersion: "1.17"})
 	if err != nil {
 		return err
 	}
