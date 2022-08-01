@@ -17,7 +17,7 @@ func TestErrorSuite(t *testing.T) {
 	suite.Run(t, new(ErrorSuite))
 }
 
-func (s ErrorSuite) TestMultiError_flatten() {
+func (s *ErrorSuite) TestMultiError_flatten() {
 	merr := MultiError{
 		Errs: []error{
 			errors.New("1"),
@@ -67,18 +67,18 @@ func (s ErrorSuite) TestMultiError_flatten() {
 	s.Assert().Equal(expected, flattened)
 }
 
-func (s ErrorSuite) TestParseYAMLError_nil() {
+func (s *ErrorSuite) TestParseYAMLError_nil() {
 	yamlErr := ParseYAMLError(nil)
 	s.Assert().Nil(yamlErr)
 }
 
-func (s ErrorSuite) TestParseYAMLError_notYAML() {
+func (s *ErrorSuite) TestParseYAMLError_notYAML() {
 	err := errors.New("not a yaml error")
 	yamlErr := ParseYAMLError(err)
 	s.Assert().Equal(err, yamlErr)
 }
 
-func (s ErrorSuite) TestParseYAMLError() {
+func (s *ErrorSuite) TestParseYAMLError() {
 	r := strings.NewReader(`
 - key: value
   error

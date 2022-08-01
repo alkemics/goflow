@@ -10,7 +10,7 @@ type NodeLoaderSuite struct {
 	suite.Suite
 }
 
-func (s NodeLoaderSuite) TestLoadNodes_ignoredNodes() {
+func (s *NodeLoaderSuite) TestLoadNodes_ignoredNodes() {
 	nl := NodeLoader{}
 	s.Assert().NoError(nl.Load("github.com/alkemics/goflow/gfutil/gfgo/internal/nodes"))
 
@@ -29,7 +29,7 @@ func (s NodeLoaderSuite) TestLoadNodes_ignoredNodes() {
 	s.Assert().NotZero(node)
 }
 
-func (s NodeLoaderSuite) TestNodeLoader() {
+func (s *NodeLoaderSuite) TestNodeLoader() {
 	nl := NodeLoader{}
 	s.Assert().NoError(nl.Load("github.com/alkemics/goflow/gfutil/gfgo/internal/nodes"))
 
