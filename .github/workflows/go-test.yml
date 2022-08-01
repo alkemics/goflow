@@ -40,7 +40,7 @@ jobs:
       - name: Lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.30
+          version: v1.47.2
       - name: Check diffs
         # --name-only first for debugging
         run: git diff --name-only && git diff --quiet

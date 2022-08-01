@@ -11,7 +11,7 @@ type afterSuite struct {
 	suite.Suite
 }
 
-func (s afterSuite) TestWrap() {
+func (s *afterSuite) TestWrap() {
 	node := gfutil.DummyNodeRenderer{
 		PreviousVal: []string{
 			"a",
@@ -31,7 +31,7 @@ func (s afterSuite) TestWrap() {
 	s.Assert().Equal([]string{"a", "b", "c"}, wrapped.Previous())
 }
 
-func (s afterSuite) TestNoAfter() {
+func (s *afterSuite) TestNoAfter() {
 	node := gfutil.DummyNodeRenderer{
 		PreviousVal: []string{
 			"a",
