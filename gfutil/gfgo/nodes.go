@@ -406,7 +406,8 @@ func getDocFromPackage(pkg *packages.Package, pos token.Pos) string {
 
 // parseTypesDoc hacks the thing by grabbing info of types using doc.
 // TODO: review all this and improve if possible...
-//       shall we try with https://pkg.go.dev/go/ast?tab=doc#CommentGroup maybe?
+//
+//	shall we try with https://pkg.go.dev/go/ast?tab=doc#CommentGroup maybe?
 func parseTypesDoc(pkg *packages.Package) (map[string]string, error) {
 	if len(pkg.GoFiles) == 0 {
 		return nil, nil

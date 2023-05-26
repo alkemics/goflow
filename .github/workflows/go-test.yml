@@ -12,11 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
-          go-version: ~1.19
-        id: go
-      - name: Check out code into the Go module directory
+          go-version: 1.19
+      - name: Checkout
         uses: actions/checkout@v3
       - name: Get dependencies
         run: go mod download
@@ -31,16 +30,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
-          go-version: ~1.19
-        id: go
-      - name: Check out code into the Go module directory
+          go-version: 1.19
+      - name: Checkout
         uses: actions/checkout@v3
       - name: Lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.47.2
+          version: v1.52.2
       - name: Check diffs
         # --name-only first for debugging
         run: git diff --name-only && git diff --quiet

@@ -16,8 +16,8 @@ func (e Error) Error() string {
 }
 
 // Check checks that all nodes are used in one way or another:
-// 	- have only one error output
-//	- are used explicitly
+//   - have only one error output
+//   - are used explicitly
 func Check(graph goflow.GraphRenderer) error {
 	nodes := graph.Nodes()
 

@@ -1,4 +1,4 @@
-// +build !codeanalysis
+//go:build !codeanalysis
 
 package main
 

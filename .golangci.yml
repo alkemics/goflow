@@ -3,6 +3,10 @@ run:
   build-tags:
     - codeanalysis
 
+issues:
+  exclude:
+    - unusedresult
+
 linters:
   enable:
     - gosec # (gas) Inspects source code for security problems

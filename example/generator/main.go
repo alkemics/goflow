@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"sort"
@@ -111,7 +110,7 @@ func main() {
 			continue
 		}
 
-		if err := ioutil.WriteFile(generatedFilename, buf.Bytes(), 0o600); err != nil {
+		if err := os.WriteFile(generatedFilename, buf.Bytes(), 0o600); err != nil {
 			genErrs = append(genErrs, err)
 		}
 
@@ -131,7 +130,7 @@ func main() {
 		return n1 <= n2
 	})
 	handleErr(json.NewEncoder(&buf).Encode(nodes))
-	handleErr(ioutil.WriteFile("nodes.json", buf.Bytes(), 0o600))
+	handleErr(os.WriteFile("nodes.json", buf.Bytes(), 0o600))
 
 	var graphLoader gfgo.NodeLoader
 	err = graphLoader.Load(
@@ -153,7 +152,7 @@ func main() {
 	err = goWriter.Flush()
 	handleErr(err)
 
-	err = ioutil.WriteFile(pgFilename, buf.Bytes(), 0o600)
+	err = os.WriteFile(pgFilename, buf.Bytes(), 0o600)
 	handleErr(err)
 }
 

@@ -1,13 +1,13 @@
 package gfutil
 
 import (
-	"io/ioutil"
+	"os"
 	"path"
 	"strings"
 )
 
 func FindGraphFileNames(dir string) ([]string, error) {
-	files, err := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}

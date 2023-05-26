@@ -8,6 +8,7 @@ package goflow
 //   - NodeWrapper
 //   - Linter
 //   - Checker
+//
 // goflow provides functions to use those simpler types as GraphWrappers.
 type GraphWrapper func(unmarshal func(interface{}) error, graph GraphRenderer) (GraphRenderer, error)
 
