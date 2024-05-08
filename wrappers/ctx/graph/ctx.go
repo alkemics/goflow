@@ -12,7 +12,6 @@ import (
 )
 
 /*
-
  */
 type Ctx struct{}
 
@@ -25,7 +24,6 @@ func newCtx(id string) Ctx {
 }
 
 /*
-
  */
 func (g *Ctx) Run(ctx context.Context) {
 

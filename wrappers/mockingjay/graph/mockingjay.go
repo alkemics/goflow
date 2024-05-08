@@ -13,7 +13,6 @@ import (
 )
 
 /*
-
  */
 type Mockingjay struct{}
 
@@ -26,7 +25,6 @@ func newMockingjay(id string) Mockingjay {
 }
 
 /*
-
  */
 func (g *Mockingjay) Run(ctx context.Context, a int, b int) (sum int) {
 
