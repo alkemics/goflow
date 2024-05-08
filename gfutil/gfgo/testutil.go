@@ -2,7 +2,6 @@ package gfgo
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -81,7 +80,7 @@ func TestGenerate(t *testing.T, wrappers []goflow.GraphWrapper, filename string,
 	} else if err != nil {
 		require.NoError(err)
 	}
-	err = ioutil.WriteFile(goFilename, buf.Bytes(), 0o600)
+	err = os.WriteFile(goFilename, buf.Bytes(), 0o600)
 	require.NoError(err)
 
 	mainFilename := path.Join("graph", "main.go")
@@ -117,7 +116,7 @@ func TestGenerate(t *testing.T, wrappers []goflow.GraphWrapper, filename string,
 	require.NoError(w.Flush())
 
 	require.NoError(err)
-	require.NoError(ioutil.WriteFile(mainFilename, buf.Bytes(), 0o600))
+	require.NoError(os.WriteFile(mainFilename, buf.Bytes(), 0o600))
 
 	cmd := exec.Command("go", "run", "./graph")
 	var out, errOut bytes.Buffer
