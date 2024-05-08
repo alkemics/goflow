@@ -42,12 +42,17 @@ func (g *Mockingjay) Run(ctx context.Context, a int, b int) (sum int) {
 	// __output_sum_builder outputs
 	var __output_sum_builder_sum int
 
+	// __print_values outputs
+	var __print_values_aggregated []interface{}
+
 	// add outputs
 	var add_sum int
 
 	// inputs outputs
 	var inputs_a int
 	var inputs_b int
+
+	// print outputs
 
 	igniteNodeID := "ignite"
 	doneNodeID := "done"
@@ -106,6 +111,18 @@ func (g *Mockingjay) Run(ctx context.Context, a int, b int) (sum int) {
 			},
 			alreadyDone: false,
 		},
+		"__print_values": {
+			deps: map[string]struct{}{
+				"add":        {},
+				igniteNodeID: {},
+			},
+			run: func() {
+				__print_values_aggregated = append(__print_values_aggregated, "sum")
+				__print_values_aggregated = append(__print_values_aggregated, add_sum)
+				done <- "__print_values"
+			},
+			alreadyDone: false,
+		},
 		"add": {
 			deps: map[string]struct{}{
 				"__ctx":      {},
@@ -159,6 +176,32 @@ func (g *Mockingjay) Run(ctx context.Context, a int, b int) (sum int) {
 			},
 			alreadyDone: false,
 		},
+		"print": {
+			deps: map[string]struct{}{
+				"__ctx":          {},
+				"__print_values": {},
+				igniteNodeID:     {},
+			},
+			run: func() {
+
+				var _mock []interface{}
+				if _mocks, ok := ctx.Value(mockingjay.ContextKey).(map[string][]interface{}); ok && _mocks != nil {
+					m, ok := _mocks["print"]
+					if ok {
+						_mock = m
+					}
+				}
+
+				if _mock != nil {
+
+				} else {
+					nodes.PrinterCtx(__ctx_ctx, __print_values_aggregated)
+				}
+
+				done <- "print"
+			},
+			alreadyDone: false,
+		},
 		igniteNodeID: {
 			deps: map[string]struct{}{},
 			run: func() {
@@ -172,8 +215,10 @@ func (g *Mockingjay) Run(ctx context.Context, a int, b int) (sum int) {
 				"__add_b":              {},
 				"__ctx":                {},
 				"__output_sum_builder": {},
+				"__print_values":       {},
 				"add":                  {},
 				"inputs":               {},
+				"print":                {},
 			},
 			run: func() {
 				done <- doneNodeID

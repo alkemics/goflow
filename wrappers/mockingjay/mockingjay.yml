@@ -11,5 +11,12 @@ nodes:
       a: inputs.a
       b: inputs.b
 
+  - id: print
+    type: nodes.PrinterCtx
+    bind:
+      values:
+        - '"sum"'
+        - add.sum
+
 outputs:
   sum: add.sum
