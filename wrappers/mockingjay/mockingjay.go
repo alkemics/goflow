@@ -31,8 +31,8 @@ func WithMock(ctx context.Context, nodeID string, values ...interface{}) context
 //
 // The WithMock helper function is provided to make it easier to mock  node:
 //
-//     ctx := mockingjay.WithMock(ctx, "myNode", 42)
-//     graph.Run(ctx, ...)
+//	ctx := mockingjay.WithMock(ctx, "myNode", 42)
+//	graph.Run(ctx, ...)
 func Mock(_ func(interface{}) error, node goflow.NodeRenderer) (goflow.NodeRenderer, error) {
 	return mocker{
 		NodeRenderer: ctx.Injector{

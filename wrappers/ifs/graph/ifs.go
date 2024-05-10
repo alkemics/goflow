@@ -11,7 +11,6 @@ import (
 )
 
 /*
-
  */
 type Ifs struct{}
 
@@ -24,7 +23,6 @@ func newIfs(id string) Ifs {
 }
 
 /*
-
  */
 func (g *Ifs) Run() {
 

@@ -12,7 +12,6 @@ import (
 )
 
 /*
-
  */
 type Constants struct{}
 
@@ -25,7 +24,6 @@ func newConstants(id string) Constants {
 }
 
 /*
-
  */
 func (g *Constants) Run() {
 

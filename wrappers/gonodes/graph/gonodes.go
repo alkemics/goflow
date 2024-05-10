@@ -10,7 +10,6 @@ import (
 )
 
 /*
-
  */
 type GoNodes struct{ debug bool }
 
@@ -27,7 +26,6 @@ func newGoNodes(id string, debug bool) GoNodes {
 }
 
 /*
-
  */
 func (g *GoNodes) Run() {
 

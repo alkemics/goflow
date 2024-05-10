@@ -2,7 +2,6 @@ package goflow
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -15,7 +14,7 @@ import (
 //
 // It also logs the time taken since start, because why not.
 func WriteFile(content, filename string, start time.Time) error {
-	before, err := ioutil.ReadFile(filename)
+	before, err := os.ReadFile(filename)
 	if err != nil && !os.IsNotExist(err) {
 		return err
 	}
@@ -46,7 +45,7 @@ func WriteFile(content, filename string, start time.Time) error {
 }
 
 func FindGraphFileNames(dir string) ([]string, error) {
-	files, err := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}

@@ -10,7 +10,6 @@ import (
 )
 
 /*
-
  */
 type Ouputs struct{}
 
@@ -23,7 +22,6 @@ func newOuputs(id string) Ouputs {
 }
 
 /*
-
  */
 func (g *Ouputs) Run() (random_int int, random_ints []int) {
 

@@ -11,7 +11,6 @@ import (
 )
 
 /*
-
  */
 type Bind struct{}
 
@@ -24,7 +23,6 @@ func newBind(id string) Bind {
 }
 
 /*
-
  */
 func (g *Bind) Run() {
 
