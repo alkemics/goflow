@@ -1,1 +1,3 @@
 * @alkemics/sxm-core
+go.mod @alkemics/sxm-core @lucyalkemics
+go.sum @alkemics/sxm-core @lucyalkemics
