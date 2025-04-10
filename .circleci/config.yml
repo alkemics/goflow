@@ -2,57 +2,17 @@ version: 2.1
 
 orbs:
   ci: alkemics/ci@2
-  gh: circleci/github-cli@2
 
 aliases:
-  - executor: &golang
-      name: ci/golang
-      golang-version: "1.19"
-  - filter-master-only: &master-only
-      branches:
-        only: master
   - filter-PR-only: &PR-only
       branches:
         ignore: master
 
 workflows:
-  main:
-    jobs:
-      - ci/go-setup:
-          name: Setup
-          executor: *golang
-          context:
-            - github
-
-      - ci/go-lint:
-          name: Lint
-          executor: *golang
-          filters: *PR-only
-          requires:
-            - Setup
-          context:
-            - github
-
-      - lint-commits:
-          name: Lint commits
-          filters: *PR-only
-          requires:
-            - Setup
-          context:
-            - github
-
-      - ci/go-test:
-          name: Tests
-          executor: *golang
-          filters: *PR-only
-          requires:
-            - Setup
-          with-test-params: false
-
-      - build:
-          name: Build
-          requires:
-            - Setup
-            - Lint
-            - Lint commits
-            - Tests
+    main:
+      jobs:
+        - ci/hodor:
+            filters: *PR-only
+            context:
+              - github
+              - hodor
