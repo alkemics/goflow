@@ -3,7 +3,7 @@ module github.com/alkemics/goflow
 go 1.26
 
 require (
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.11.1
 	golang.org/x/tools v0.32.0
 	gopkg.in/yaml.v2 v2.4.0
 	mvdan.cc/gofumpt v0.2.1
