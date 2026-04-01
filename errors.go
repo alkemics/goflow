@@ -24,7 +24,7 @@ func (e Error) Unwrap() error {
 
 func (e Error) Format(s fmt.State, verb rune) {
 	if verb != 'v' || (!s.Flag('+')) {
-		fmt.Fprint(s, e.Error())
+		fmt.Fprint(s, e.Error()) //nolint:errcheck
 		return
 	}
 
@@ -40,7 +40,7 @@ func (e Error) Format(s fmt.State, verb rune) {
 		errMsg = strings.Join(strs, "\n")
 	}
 
-	fmt.Fprintf(s, `%s:
+	_, _ = fmt.Fprintf(s, `%s:
 %v
 `,
 		e.Filename,

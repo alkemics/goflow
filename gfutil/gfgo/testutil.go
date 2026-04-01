@@ -76,7 +76,7 @@ func TestGenerate(t *testing.T, wrappers []goflow.GraphWrapper, filename string,
 	require.NoError(w.Flush())
 
 	if _, err := os.Open("graph"); os.IsNotExist(err) {
-		require.NoError(os.Mkdir("graph", 0o755))
+		require.NoError(os.Mkdir("graph", 0o750))
 	} else if err != nil {
 		require.NoError(err)
 	}

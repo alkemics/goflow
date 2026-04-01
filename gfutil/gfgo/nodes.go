@@ -413,6 +413,7 @@ func parseTypesDoc(pkg *packages.Package) (map[string]string, error) {
 		return nil, nil
 	}
 
+	//nolint:staticcheck // SA1019: parser.ParseDir is deprecated since Go 1.25; TODO: migrate to golang.org/x/tools/go/packages
 	pkgs, err := parser.ParseDir(pkg.Fset, path.Dir(pkg.GoFiles[0]), nil, parser.ParseComments)
 	if err != nil {
 		return nil, err
