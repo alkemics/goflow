@@ -15,7 +15,7 @@ func ParseType(typ types.Type) (string, []goflow.Import, error) {
 	// Replace the full packages names with their name.
 	t := typ.String()
 	for i, imp := range imports {
-		t = strings.Replace(t, imp.Dir, imp.Pkg, -1)
+		t = strings.ReplaceAll(t, imp.Dir, imp.Pkg)
 		// TODO: check this when we migrate to modules.
 		if strings.Contains(imp.Dir, "/vendor/") {
 			imports[i].Dir = imp.Dir[strings.Index(imp.Dir, "/vendor/")+8:]

@@ -11,14 +11,14 @@ import (
 //
 // Even if a wrapper returns an error, this function will go through all the wrappers.
 func Load(yamlFilename string, wrappers []GraphWrapper) (GraphRenderer, error) {
-	file, err := os.Open(yamlFilename)
+	file, err := os.Open(yamlFilename) //nolint:gosec
 	if err != nil {
 		return nil, Error{
 			Filename: yamlFilename,
 			Err:      err,
 		}
 	}
-	defer file.Close()
+	defer file.Close() //nolint:errcheck
 
 	var g graphLoader
 	if err := yaml.NewDecoder(file).Decode(&g); err != nil {

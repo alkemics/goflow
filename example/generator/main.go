@@ -110,7 +110,7 @@ func main() {
 			continue
 		}
 
-		if err := os.WriteFile(generatedFilename, buf.Bytes(), 0o600); err != nil {
+		if err := os.WriteFile(generatedFilename, buf.Bytes(), 0o600); err != nil { //nolint:gosec
 			genErrs = append(genErrs, err)
 		}
 

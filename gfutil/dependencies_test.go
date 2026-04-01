@@ -56,7 +56,7 @@ func (n dependencyNode) Run(inputs, outputs []goflow.Field) (string, error) { re
 func (s *DependenciesSuite) TestSortNode() {
 	s.dependencyMap["d'"] = []string{"b", "c"}
 
-	nodes := make([]goflow.NodeRenderer, 0)
+	nodes := make([]goflow.NodeRenderer, 0, len(s.dependencyMap))
 	for id, deps := range s.dependencyMap {
 		nodes = append(nodes, dependencyNode{
 			id:   id,

@@ -14,7 +14,7 @@ import (
 //
 // It also logs the time taken since start, because why not.
 func WriteFile(content, filename string, start time.Time) error {
-	before, err := os.ReadFile(filename)
+	before, err := os.ReadFile(filename) //nolint:gosec
 	if err != nil && !os.IsNotExist(err) {
 		return err
 	}
@@ -25,13 +25,17 @@ func WriteFile(content, filename string, start time.Time) error {
 
 	created := os.IsNotExist(err)
 
-	wf, err := os.OpenFile(filename, os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0o600)
+	wf, err := os.OpenFile(filename, os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0o600) //nolint:gosec
 	if err != nil {
 		return err
 	}
-	defer wf.Close()
 
 	if _, err := wf.WriteString(content); err != nil {
+		_ = wf.Close()
+		return err
+	}
+
+	if err := wf.Close(); err != nil {
 		return err
 	}
 

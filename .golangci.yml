@@ -1,5 +1,7 @@
+version: "2"
+
 run:
-  deadline: 8m
+  timeout: 8m
   build-tags:
     - codeanalysis
 
@@ -9,5 +11,8 @@ linters:
     - nolintlint # Reports ill-formed or insufficient nolint directives
     - unconvert # Remove unnecessary type conversions
     - whitespace # Tool for detection of leading and trailing whitespace
-    - gofumpt # Gofumpt checks whether code was gofumpt-ed
     - prealloc # Finds slice declarations that could potentially be preallocated
+
+formatters:
+  enable:
+    - gofumpt # Gofumpt checks whether code was gofumpt-ed

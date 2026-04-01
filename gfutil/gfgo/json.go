@@ -59,7 +59,7 @@ func WithJSONMarshal(
 	yamlFilename string,
 	nodes []Node,
 ) GenerateFunc {
-	file, err := os.Open(yamlFilename)
+	file, err := os.Open(yamlFilename) //nolint:gosec
 	if err != nil {
 		return func(w io.Writer, g goflow.GraphRenderer) error {
 			return err
