@@ -6,9 +6,8 @@
 package main
 
 import (
-	"fmt"
-
 	"context"
+	"fmt"
 )
 
 func assert(b bool) {
