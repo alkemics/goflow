@@ -36,6 +36,8 @@ func extractImports(typ types.Type) ([]goflow.Import, error) {
 		return extractImports(typ.Elem())
 	case *types.Pointer:
 		return extractImports(typ.Elem())
+	case *types.Alias:
+		return extractImports(typ.Rhs())
 	case *types.Named:
 		pkg := typ.Obj().Pkg()
 		if pkg == nil {
