@@ -4,10 +4,19 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"sync"
 
 	"golang.org/x/tools/imports"
 
 	"mvdan.cc/gofumpt/format"
+)
+
+var (
+	detectedLangVersion string
+	detectionOnce       sync.Once
 )
 
 // Writer wraps another io.Writer, adding some Go code formatting through
@@ -40,6 +49,28 @@ func (w *Writer) Write(src []byte) (int, error) {
 	return w.buf.Write(src)
 }
 
+// detectGoVersion detects the Go version from the nearest go.mod file
+// by running "go list -m -f {{.GoVersion}}" once and caching the result.
+func detectGoVersion(filename string) string {
+	detectionOnce.Do(func() {
+		dir := filepath.Dir(filename)
+		cmd := exec.Command("go", "list", "-m", "-f", "{{.GoVersion}}")
+		cmd.Dir = dir
+		output, err := cmd.Output()
+		if err != nil {
+			detectedLangVersion = "go1.27" // fallback
+			return
+		}
+		version := strings.TrimSpace(string(output))
+		if version == "" {
+			detectedLangVersion = "go1.27"
+		} else {
+			detectedLangVersion = "go" + version
+		}
+	})
+	return detectedLangVersion
+}
+
 // Flush formats the buffered data with golang.org/x/tools/imports.Process,
 // then writes it to the wrapped io.Writer.
 func (w *Writer) Flush() error {
@@ -48,7 +79,9 @@ func (w *Writer) Flush() error {
 		return err
 	}
 
-	src, err = format.Source(src, format.Options{LangVersion: "go1.27"})
+	langVersion := detectGoVersion(w.filename)
+
+	src, err = format.Source(src, format.Options{LangVersion: langVersion})
 	if err != nil {
 		return err
 	}
