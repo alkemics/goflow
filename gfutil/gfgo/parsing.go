@@ -30,14 +30,20 @@ func extractImports(typ types.Type) ([]goflow.Import, error) {
 		return nil, nil
 	case *types.Interface:
 		return nil, nil
-	case *types.Array:
-		return extractImports(typ.Elem())
-	case *types.Slice:
-		return extractImports(typ.Elem())
-	case *types.Pointer:
-		return extractImports(typ.Elem())
 	case *types.Alias:
-		return extractImports(typ.Rhs())
+		// Handle type aliases (Go 1.22+)
+		// Recursively unwrap the alias to get the underlying type
+		return extractImports(types.Unalias(typ))
+	case *types.Array:
+		// Unalias the element before recursing to handle aliases properly
+		return extractImports(types.Unalias(typ.Elem()))
+	case *types.Slice:
+		// Unalias the element before recursing to handle aliases properly
+		return extractImports(types.Unalias(typ.Elem()))
+	case *types.Pointer:
+		// Unalias the element before recursing to handle aliases properly
+		// This is critical for Go 1.22+ where types like json.RawMessage are aliases
+		return extractImports(types.Unalias(typ.Elem()))
 	case *types.Named:
 		pkg := typ.Obj().Pkg()
 		if pkg == nil {
@@ -45,10 +51,20 @@ func extractImports(typ types.Type) ([]goflow.Import, error) {
 			return nil, nil
 		}
 
+		pkgPath := pkg.Path()
+		pkgName := pkg.Name()
+
+		// WORKAROUND: In Go 1.23+, internal JSON implementation uses encoding/json/jsontext
+		// but user code should import encoding/json. Map subpackages back to parent.
+		if pkgPath == "encoding/json/jsontext" {
+			pkgPath = "encoding/json"
+			pkgName = "json"
+		}
+
 		return []goflow.Import{
 			{
-				Pkg: pkg.Name(),
-				Dir: pkg.Path(),
+				Pkg: pkgName,
+				Dir: pkgPath,
 			},
 		}, nil
 	case *types.Struct:

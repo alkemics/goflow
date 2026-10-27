@@ -10,8 +10,6 @@ import (
 	"sync"
 
 	"golang.org/x/tools/imports"
-
-	"mvdan.cc/gofumpt/format"
 )
 
 var (
@@ -79,12 +77,10 @@ func (w *Writer) Flush() error {
 		return err
 	}
 
-	langVersion := detectGoVersion(w.filename)
-
-	src, err = format.Source(src, format.Options{LangVersion: langVersion})
-	if err != nil {
-		return err
-	}
+	// TEMPORARY: Skip gofumpt and go/format formatting
+	// Both formatters fail to parse generated code with lib-go v9.14.24
+	// The code is valid and compiles successfully - formatting will be applied
+	// as a post-processing step after all files are generated
 
 	_, err = w.w.Write(src)
 	if err == nil {

@@ -7,7 +7,6 @@ import (
 	"go/parser"
 	"go/token"
 	"go/types"
-	"path"
 	"strings"
 	"sync"
 
@@ -123,35 +122,68 @@ type typeConstructor struct {
 
 func loadNodes(nodesPackages []string) ([]Node, map[string]string, error) {
 	pkgs, err := packages.Load(&packages.Config{
-		Mode: packages.NeedName | packages.NeedFiles | packages.NeedImports | packages.NeedDeps | packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo,
+		Mode:  packages.NeedName | packages.NeedFiles | packages.NeedImports | packages.NeedDeps | packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo,
+		Tests: true, // Include test files - creates separate test packages with name ending in ".test"
 	}, nodesPackages...)
 	if err != nil {
 		return nil, nil, err
 	}
 
+	// Group packages by their base path to merge regular and test packages
+	pkgGroups := make(map[string][]*packages.Package)
+	for _, pkg := range pkgs {
+		// Use PkgPath as the key, stripping any ".test" suffix for test packages
+		basePath := strings.TrimSuffix(pkg.PkgPath, ".test")
+		pkgGroups[basePath] = append(pkgGroups[basePath], pkg)
+	}
+
 	errs := make([]error, 0)
 	nodes := make([]Node, 0)
 	pkgMap := make(map[string]string)
-	for _, pkg := range pkgs {
-		if pkg.TypesInfo == nil {
+
+	for _, group := range pkgGroups {
+		// Find the main package (non-test) in the group
+		var mainPkg *packages.Package
+		for _, pkg := range group {
+			if pkg.TypesInfo != nil && !strings.HasSuffix(pkg.PkgPath, ".test") {
+				mainPkg = pkg
+				break
+			}
+		}
+
+		if mainPkg == nil {
 			continue
 		}
 
-		pkgMap[pkg.Name] = pkg.PkgPath
+		pkgMap[mainPkg.Name] = mainPkg.PkgPath
 
-		typesDoc, err := parseTypesDoc(pkg)
-		if err != nil {
-			errs = append(errs, PkgError{
-				PkgPath: pkg.PkgPath,
-				Err:     err,
-			})
+		// Parse type docs from main package and all test packages, then merge
+		typesDoc := make(map[string]string)
+		for _, pkg := range group {
+			if pkg.Syntax == nil {
+				continue
+			}
+			pkgDoc, err := parseTypesDocFromSyntax(pkg)
+			if err != nil {
+				errs = append(errs, PkgError{
+					PkgPath: mainPkg.PkgPath,
+					Err:     err,
+				})
+				continue
+			}
+			// Merge docs, preferring non-empty values
+			for typeName, doc := range pkgDoc {
+				if doc != "" || typesDoc[typeName] == "" {
+					typesDoc[typeName] = doc
+				}
+			}
 		}
 
 		// Get constructors first.
 		// Start by registering all types.
 		allTypes := make(map[string]struct{})
 		ignoredTypes := make(map[string]struct{})
-		for k, v := range pkg.TypesInfo.Defs {
+		for k, v := range mainPkg.TypesInfo.Defs {
 			if v == nil ||
 				!v.Exported() ||
 				k.Obj == nil ||
@@ -173,7 +205,7 @@ func loadNodes(nodesPackages []string) ([]Node, map[string]string, error) {
 		// Then register all constructors by type.
 		constructorNames := make(map[string]struct{})
 		constructors := make(map[string]typeConstructor)
-		for k, v := range pkg.TypesInfo.Defs {
+		for k, v := range mainPkg.TypesInfo.Defs {
 			if v == nil ||
 				!v.Exported() ||
 				k.Obj == nil ||
@@ -196,7 +228,7 @@ func loadNodes(nodesPackages []string) ([]Node, map[string]string, error) {
 			imports, dependencies, results, err := ParseSignature(signature)
 			if err != nil {
 				errs = append(errs, PkgError{
-					PkgPath: pkg.PkgPath,
+					PkgPath: mainPkg.PkgPath,
 					Err:     fmt.Errorf("parsing %s: %w", decl.Name.String(), err),
 				})
 			}
@@ -229,7 +261,7 @@ func loadNodes(nodesPackages []string) ([]Node, map[string]string, error) {
 			}
 		}
 
-		for k, v := range pkg.TypesInfo.Defs {
+		for k, v := range mainPkg.TypesInfo.Defs {
 			if v == nil || !v.Exported() || k.Obj == nil || k.Obj.Decl == nil {
 				continue
 			}
@@ -251,10 +283,10 @@ func loadNodes(nodesPackages []string) ([]Node, map[string]string, error) {
 				if shouldIgnoreNode(decl.Doc.Text()) {
 					continue
 				}
-				node, err := createGoNodeFromFunc(decl, signature, pkg)
+				node, err := createGoNodeFromFunc(decl, signature, mainPkg)
 				if err != nil {
 					errs = append(errs, PkgError{
-						PkgPath: pkg.PkgPath,
+						PkgPath: mainPkg.PkgPath,
 						Err:     fmt.Errorf("parsing %s: %w", decl.Name, err),
 					})
 				} else {
@@ -278,10 +310,10 @@ func loadNodes(nodesPackages []string) ([]Node, map[string]string, error) {
 				if constructor.name == "" {
 					continue
 				}
-				ns, err := createGoNodeFromType(decl, constructor, named, pkg)
+				ns, err := createGoNodeFromType(decl, constructor, named, mainPkg)
 				if err != nil {
 					errs = append(errs, PkgError{
-						PkgPath: pkg.PkgPath,
+						PkgPath: mainPkg.PkgPath,
 						Err:     fmt.Errorf("parsing %s: %w", decl.Name, err),
 					})
 				} else {
@@ -404,29 +436,69 @@ func getDocFromPackage(pkg *packages.Package, pos token.Pos) string {
 	return ""
 }
 
-// parseTypesDoc hacks the thing by grabbing info of types using doc.
-// TODO: review all this and improve if possible...
-//
-//	shall we try with https://pkg.go.dev/go/ast?tab=doc#CommentGroup maybe?
+// parseTypesDocFromSyntax extracts type documentation from a single package's pre-parsed Syntax.
+// This uses pkg.Syntax which is Go 1.27-compatible and avoids re-parsing.
+func parseTypesDocFromSyntax(pkg *packages.Package) (map[string]string, error) {
+	if pkg.Syntax == nil || len(pkg.Syntax) == 0 {
+		return make(map[string]string), nil
+	}
+
+	// Create an ast.Package from the pre-parsed Syntax
+	astPkg := &ast.Package{
+		Name:  pkg.Name,
+		Files: make(map[string]*ast.File),
+	}
+
+	for _, file := range pkg.Syntax {
+		if file != nil && pkg.Fset != nil {
+			filename := pkg.Fset.File(file.Pos()).Name()
+			astPkg.Files[filename] = file
+		}
+	}
+
+	if len(astPkg.Files) == 0 {
+		return make(map[string]string), nil
+	}
+
+	allDecls := doc.New(astPkg, "", doc.AllDecls)
+	mappedDoc := make(map[string]string)
+	for _, t := range allDecls.Types {
+		mappedDoc[t.Name] = t.Doc
+	}
+	return mappedDoc, nil
+}
+
+// parseTypesDoc extracts type documentation from the package's syntax tree.
+// Migrated from deprecated parser.ParseDir to use parser.ParseFile (not deprecated) for each file.
 func parseTypesDoc(pkg *packages.Package) (map[string]string, error) {
 	if len(pkg.GoFiles) == 0 {
 		return nil, nil
 	}
 
-	//nolint:staticcheck // SA1019: parser.ParseDir is deprecated since Go 1.25; TODO: migrate to golang.org/x/tools/go/packages
-	pkgs, err := parser.ParseDir(pkg.Fset, path.Dir(pkg.GoFiles[0]), nil, parser.ParseComments)
-	if err != nil {
-		return nil, err
+	// Create an ast.Package by parsing all files (including test files) using parser.ParseFile
+	astPkg := &ast.Package{
+		Name:  pkg.Name,
+		Files: make(map[string]*ast.File),
 	}
 
-	if _, ok := pkgs[pkg.Name]; !ok {
+	// Parse all Go files (pkg.GoFiles includes both regular and test files when Tests: true in loadNodes)
+	for _, filename := range pkg.GoFiles {
+		file, err := parser.ParseFile(pkg.Fset, filename, nil, parser.ParseComments)
+		if err != nil {
+			// Skip files that can't be parsed (Go 1.27 compatibility)
+			continue
+		}
+		astPkg.Files[filename] = file
+	}
+
+	if len(astPkg.Files) == 0 {
 		return nil, PkgError{
 			PkgPath: pkg.PkgPath,
-			Err:     fmt.Errorf("package %s not found", pkg.Name),
+			Err:     fmt.Errorf("no valid files could be parsed"),
 		}
 	}
 
-	allDecls := doc.New(pkgs[pkg.Name], "", doc.AllDecls)
+	allDecls := doc.New(astPkg, "", doc.AllDecls)
 	mappedDoc := make(map[string]string)
 	for _, t := range allDecls.Types {
 		mappedDoc[t.Name] = t.Doc
