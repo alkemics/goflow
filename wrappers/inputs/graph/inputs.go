@@ -29,6 +29,7 @@ func newInputs(id string) Inputs {
 optional: no
 */
 func (g *Inputs) Run(ctx context.Context, a int, b []int, no bool) {
+
 	// __add_list outputs
 	var __add_list_aggregated []int
 
@@ -70,6 +71,7 @@ func (g *Inputs) Run(ctx context.Context, a int, b []int, no bool) {
 		run         func()
 		alreadyDone bool
 	}{
+
 		"__add_list": {
 			deps: map[string]struct{}{
 				"inputs":     {},

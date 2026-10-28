@@ -24,6 +24,7 @@ func newOuputs(id string) Ouputs {
 /*
  */
 func (g *Ouputs) Run() (random_int int, random_ints []int) {
+
 	// __output_random_int_builder outputs
 	var __output_random_int_builder_random_int int
 
@@ -47,12 +48,14 @@ func (g *Ouputs) Run() (random_int int, random_ints []int) {
 		run         func()
 		alreadyDone bool
 	}{
+
 		"__output_random_int_builder": {
 			deps: map[string]struct{}{
 				"produce_random_int": {},
 				igniteNodeID:         {},
 			},
 			run: func() {
+
 				__output_random_int_builder_random_int = produce_random_int_n
 				random_int = __output_random_int_builder_random_int
 				done <- "__output_random_int_builder"
@@ -66,6 +69,7 @@ func (g *Ouputs) Run() (random_int int, random_ints []int) {
 				igniteNodeID:                 {},
 			},
 			run: func() {
+
 				__output_random_ints_builder_random_ints = append(__output_random_ints_builder_random_ints, produce_random_int_n)
 				__output_random_ints_builder_random_ints = append(__output_random_ints_builder_random_ints, produce_another_random_int_n)
 				random_ints = __output_random_ints_builder_random_ints

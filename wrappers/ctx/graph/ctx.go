@@ -26,6 +26,7 @@ func newCtx(id string) Ctx {
 /*
  */
 func (g *Ctx) Run(ctx context.Context) {
+
 	// __ctx outputs
 	var __ctx_ctx context.Context
 
@@ -50,6 +51,7 @@ func (g *Ctx) Run(ctx context.Context) {
 		run         func()
 		alreadyDone bool
 	}{
+
 		"__ctx": {
 			deps: map[string]struct{}{
 				igniteNodeID: {},
@@ -78,6 +80,7 @@ func (g *Ctx) Run(ctx context.Context) {
 				igniteNodeID: {},
 			},
 			run: func() {
+
 				done <- "inputs"
 			},
 			alreadyDone: false,

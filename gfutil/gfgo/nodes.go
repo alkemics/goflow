@@ -171,10 +171,25 @@ func loadNodes(nodesPackages []string) ([]Node, map[string]string, error) {
 				})
 				continue
 			}
+			// Also parse method docs
+			methodDoc, err := parseMethodsDocFromSyntax(pkg)
+			if err != nil {
+				errs = append(errs, PkgError{
+					PkgPath: mainPkg.PkgPath,
+					Err:     err,
+				})
+				continue
+			}
 			// Merge docs, preferring non-empty values
 			for typeName, doc := range pkgDoc {
 				if doc != "" || typesDoc[typeName] == "" {
 					typesDoc[typeName] = doc
+				}
+			}
+			// Merge method docs
+			for key, doc := range methodDoc {
+				if doc != "" || typesDoc[key] == "" {
+					typesDoc[key] = doc
 				}
 			}
 		}
@@ -280,16 +295,13 @@ func loadNodes(nodesPackages []string) ([]Node, map[string]string, error) {
 					// Ignore constructors.
 					continue
 				}
-				if shouldIgnoreNode(decl.Doc.Text()) {
-					continue
-				}
-				node, err := createGoNodeFromFunc(decl, signature, mainPkg)
+				node, err := createGoNodeFromFunc(decl, signature, mainPkg, typesDoc)
 				if err != nil {
 					errs = append(errs, PkgError{
 						PkgPath: mainPkg.PkgPath,
 						Err:     fmt.Errorf("parsing %s: %w", decl.Name, err),
 					})
-				} else {
+				} else if !shouldIgnoreNode(node.Doc) {
 					nodes = append(nodes, node)
 				}
 			case ast.Typ:
@@ -310,7 +322,7 @@ func loadNodes(nodesPackages []string) ([]Node, map[string]string, error) {
 				if constructor.name == "" {
 					continue
 				}
-				ns, err := createGoNodeFromType(decl, constructor, named, mainPkg)
+				ns, err := createGoNodeFromType(decl, constructor, named, mainPkg, typesDoc)
 				if err != nil {
 					errs = append(errs, PkgError{
 						PkgPath: mainPkg.PkgPath,
@@ -332,17 +344,22 @@ func loadNodes(nodesPackages []string) ([]Node, map[string]string, error) {
 	return nodes, pkgMap, err
 }
 
-func createGoNodeFromFunc(decl *ast.FuncDecl, signature *types.Signature, pkg *packages.Package) (Node, error) {
+func createGoNodeFromFunc(decl *ast.FuncDecl, signature *types.Signature, pkg *packages.Package, typesDoc map[string]string) (Node, error) {
 	imports, inputs, outputs, err := ParseSignature(signature)
 	if err != nil {
 		return Node{}, err
+	}
+
+	doc := decl.Doc.Text()
+	if doc == "" {
+		doc = typesDoc[decl.Name.String()]
 	}
 
 	return Node{
 		Pkg:     pkg.Name,
 		Typ:     decl.Name.String(),
 		PkgPath: pkg.PkgPath,
-		Doc:     decl.Doc.Text(),
+		Doc:     doc,
 		// Add node import.
 		Imports: append(
 			imports,
@@ -357,7 +374,7 @@ func createGoNodeFromFunc(decl *ast.FuncDecl, signature *types.Signature, pkg *p
 	}, nil
 }
 
-func createGoNodeFromType(decl *ast.TypeSpec, constructor typeConstructor, named *types.Named, pkg *packages.Package) ([]Node, error) {
+func createGoNodeFromType(decl *ast.TypeSpec, constructor typeConstructor, named *types.Named, pkg *packages.Package, typesDoc map[string]string) ([]Node, error) {
 	baseImports := append(constructor.imports, goflow.Import{
 		Pkg: pkg.Name,
 		Dir: pkg.PkgPath,
@@ -373,6 +390,11 @@ func createGoNodeFromType(decl *ast.TypeSpec, constructor typeConstructor, named
 		}
 
 		doc := getDocFromPackage(pkg, method.Pos())
+		// Also check method doc from typesDoc map using "TypeName.MethodName" key
+		methodKey := fmt.Sprintf("%s.%s", decl.Name.String(), method.Name())
+		if doc == "" {
+			doc = typesDoc[methodKey]
+		}
 		if shouldIgnoreNode(doc) {
 			continue
 		}
@@ -423,12 +445,26 @@ func shouldIgnoreNode(doc string) bool {
 
 // getDocFromPackage loads the doc directly from the syntax if we don't have it already.
 func getDocFromPackage(pkg *packages.Package, pos token.Pos) string {
+	targetPos := pkg.Fset.Position(pos)
+
 	for _, f := range pkg.Syntax {
 		for _, d := range f.Decls {
 			switch decl := d.(type) {
 			case *ast.FuncDecl:
+				declPos := pkg.Fset.Position(decl.Name.NamePos)
+				if decl.Recv != nil && targetPos.Filename == declPos.Filename && targetPos.Line == declPos.Line {
+					doc := ""
+					if decl.Doc != nil {
+						doc = decl.Doc.Text()
+					}
+					return doc
+				}
 				if decl.Name.NamePos == pos {
-					return decl.Doc.Text()
+					doc := ""
+					if decl.Doc != nil {
+						doc = decl.Doc.Text()
+					}
+					return doc
 				}
 			}
 		}
@@ -439,11 +475,12 @@ func getDocFromPackage(pkg *packages.Package, pos token.Pos) string {
 // parseTypesDocFromSyntax extracts type documentation from a single package's pre-parsed Syntax.
 // This uses pkg.Syntax which is Go 1.27-compatible and avoids re-parsing.
 func parseTypesDocFromSyntax(pkg *packages.Package) (map[string]string, error) {
-	if pkg.Syntax == nil || len(pkg.Syntax) == 0 {
+	if len(pkg.Syntax) == 0 {
 		return make(map[string]string), nil
 	}
 
 	// Create an ast.Package from the pre-parsed Syntax
+	//nolint:staticcheck // ast.Package is deprecated but required by go/doc.New
 	astPkg := &ast.Package{
 		Name:  pkg.Name,
 		Files: make(map[string]*ast.File),
@@ -465,43 +502,48 @@ func parseTypesDocFromSyntax(pkg *packages.Package) (map[string]string, error) {
 	for _, t := range allDecls.Types {
 		mappedDoc[t.Name] = t.Doc
 	}
+	// Also extract function documentation
+	for _, f := range allDecls.Funcs {
+		mappedDoc[f.Name] = f.Doc
+	}
 	return mappedDoc, nil
 }
 
-// parseTypesDoc extracts type documentation from the package's syntax tree.
-// Migrated from deprecated parser.ParseDir to use parser.ParseFile (not deprecated) for each file.
-func parseTypesDoc(pkg *packages.Package) (map[string]string, error) {
+// parseMethodsDocFromSyntax extracts method documentation, returning a map keyed by "TypeName.MethodName"
+func parseMethodsDocFromSyntax(pkg *packages.Package) (map[string]string, error) {
 	if len(pkg.GoFiles) == 0 {
-		return nil, nil
+		return make(map[string]string), nil
 	}
 
-	// Create an ast.Package by parsing all files (including test files) using parser.ParseFile
+	// Re-parse files with parser.ParseFile to ensure Doc fields are populated
+	// pkg.Syntax may have nil Doc fields in some Go versions
+	//nolint:staticcheck // ast.Package is deprecated but required by go/doc.New
 	astPkg := &ast.Package{
 		Name:  pkg.Name,
 		Files: make(map[string]*ast.File),
 	}
 
-	// Parse all Go files (pkg.GoFiles includes both regular and test files when Tests: true in loadNodes)
 	for _, filename := range pkg.GoFiles {
 		file, err := parser.ParseFile(pkg.Fset, filename, nil, parser.ParseComments)
 		if err != nil {
-			// Skip files that can't be parsed (Go 1.27 compatibility)
+			// Skip files that can't be parsed
 			continue
 		}
 		astPkg.Files[filename] = file
 	}
 
 	if len(astPkg.Files) == 0 {
-		return nil, PkgError{
-			PkgPath: pkg.PkgPath,
-			Err:     fmt.Errorf("no valid files could be parsed"),
-		}
+		return make(map[string]string), nil
 	}
 
 	allDecls := doc.New(astPkg, "", doc.AllDecls)
 	mappedDoc := make(map[string]string)
 	for _, t := range allDecls.Types {
-		mappedDoc[t.Name] = t.Doc
+		for _, m := range t.Methods {
+			key := fmt.Sprintf("%s.%s", t.Name, m.Name)
+			mappedDoc[key] = m.Doc
+		}
 	}
+
 	return mappedDoc, nil
 }
