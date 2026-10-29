@@ -47,6 +47,23 @@ func (s *NodeLoaderSuite) TestNodeLoader() {
 	s.Assert().NotZero(node)
 }
 
+func (s *NodeLoaderSuite) TestLoadNodes_documentation() {
+	nl := NodeLoader{}
+	s.Assert().NoError(nl.Load("github.com/alkemics/goflow/gfutil/gfgo/internal/nodes"))
+
+	var node Node
+
+	// Test function documentation from main package
+	node = nl.Find("nodes.DocumentedFunction")
+	s.Assert().NotZero(node)
+	s.Assert().Contains(node.Doc, "DocumentedFunction is a function with documentation")
+
+	// Test method documentation extraction
+	node = nl.Find("nodes.DocumentedType.MainMethod")
+	s.Assert().NotZero(node)
+	s.Assert().Contains(node.Doc, "MainMethod has documentation in the main package")
+}
+
 func TestNodeLoader(t *testing.T) {
 	suite.Run(t, new(NodeLoaderSuite))
 }
