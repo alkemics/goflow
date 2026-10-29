@@ -6,9 +6,8 @@
 package main
 
 import (
-	"fmt"
-
 	"context"
+	"fmt"
 
 	"github.com/alkemics/goflow/wrappers/mockingjay"
 )

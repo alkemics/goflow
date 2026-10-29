@@ -25,7 +25,6 @@ func newBind(id string) Bind {
 /*
  */
 func (g *Bind) Run() {
-
 	// __add_reducer outputs
 	var __add_reducer_aggregated functions.IntReducer
 
@@ -51,7 +50,6 @@ func (g *Bind) Run() {
 		run         func()
 		alreadyDone bool
 	}{
-
 		"__add_reducer": {
 			deps: map[string]struct{}{
 				igniteNodeID: {},

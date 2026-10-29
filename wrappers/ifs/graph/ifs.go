@@ -25,7 +25,6 @@ func newIfs(id string) Ifs {
 /*
  */
 func (g *Ifs) Run() {
-
 	// __print_again_values outputs
 	var __print_again_values_aggregated []interface{}
 
@@ -57,7 +56,6 @@ func (g *Ifs) Run() {
 		run         func()
 		alreadyDone bool
 	}{
-
 		"__print_again_values": {
 			deps: map[string]struct{}{
 				igniteNodeID: {},

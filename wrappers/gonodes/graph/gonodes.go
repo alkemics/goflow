@@ -28,7 +28,6 @@ func newGoNodes(id string, debug bool) GoNodes {
 /*
  */
 func (g *GoNodes) Run() {
-
 	// __add_slice_list outputs
 	var __add_slice_list_aggregated []int
 
@@ -54,7 +53,6 @@ func (g *GoNodes) Run() {
 		run         func()
 		alreadyDone bool
 	}{
-
 		"__add_slice_list": {
 			deps: map[string]struct{}{
 				"make_slice": {},

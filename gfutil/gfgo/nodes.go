@@ -132,7 +132,6 @@ func loadNodes(nodesPackages []string) ([]Node, map[string]string, error) {
 	// Group packages by their base path to merge regular and test packages
 	pkgGroups := make(map[string][]*packages.Package)
 	for _, pkg := range pkgs {
-		// Use PkgPath as the key, stripping any ".test" suffix for test packages
 		basePath := strings.TrimSuffix(pkg.PkgPath, ".test")
 		pkgGroups[basePath] = append(pkgGroups[basePath], pkg)
 	}
@@ -157,22 +156,10 @@ func loadNodes(nodesPackages []string) ([]Node, map[string]string, error) {
 
 		pkgMap[mainPkg.Name] = mainPkg.PkgPath
 
-		// Parse type docs from main package and all test packages, then merge
+		// Parse documentation from all packages in group (including test packages)
 		typesDoc := make(map[string]string)
 		for _, pkg := range group {
-			if pkg.Syntax == nil {
-				continue
-			}
-			pkgDoc, err := parseTypesDocFromSyntax(pkg)
-			if err != nil {
-				errs = append(errs, PkgError{
-					PkgPath: mainPkg.PkgPath,
-					Err:     err,
-				})
-				continue
-			}
-			// Also parse method docs
-			methodDoc, err := parseMethodsDocFromSyntax(pkg)
+			pkgDoc, err := parseTypesDoc(pkg)
 			if err != nil {
 				errs = append(errs, PkgError{
 					PkgPath: mainPkg.PkgPath,
@@ -181,13 +168,7 @@ func loadNodes(nodesPackages []string) ([]Node, map[string]string, error) {
 				continue
 			}
 			// Merge docs, preferring non-empty values
-			for typeName, doc := range pkgDoc {
-				if doc != "" || typesDoc[typeName] == "" {
-					typesDoc[typeName] = doc
-				}
-			}
-			// Merge method docs
-			for key, doc := range methodDoc {
+			for key, doc := range pkgDoc {
 				if doc != "" || typesDoc[key] == "" {
 					typesDoc[key] = doc
 				}
@@ -390,7 +371,6 @@ func createGoNodeFromType(decl *ast.TypeSpec, constructor typeConstructor, named
 		}
 
 		doc := getDocFromPackage(pkg, method.Pos())
-		// Also check method doc from typesDoc map using "TypeName.MethodName" key
 		methodKey := fmt.Sprintf("%s.%s", decl.Name.String(), method.Name())
 		if doc == "" {
 			doc = typesDoc[methodKey]
@@ -472,52 +452,15 @@ func getDocFromPackage(pkg *packages.Package, pos token.Pos) string {
 	return ""
 }
 
-// parseTypesDocFromSyntax extracts type documentation from a single package's pre-parsed Syntax.
-// This uses pkg.Syntax which is Go 1.27-compatible and avoids re-parsing.
-func parseTypesDocFromSyntax(pkg *packages.Package) (map[string]string, error) {
-	if len(pkg.Syntax) == 0 {
-		return make(map[string]string), nil
-	}
-
-	// Create an ast.Package from the pre-parsed Syntax
-	//nolint:staticcheck // ast.Package is deprecated but required by go/doc.New
-	astPkg := &ast.Package{
-		Name:  pkg.Name,
-		Files: make(map[string]*ast.File),
-	}
-
-	for _, file := range pkg.Syntax {
-		if file != nil && pkg.Fset != nil {
-			filename := pkg.Fset.File(file.Pos()).Name()
-			astPkg.Files[filename] = file
-		}
-	}
-
-	if len(astPkg.Files) == 0 {
-		return make(map[string]string), nil
-	}
-
-	allDecls := doc.New(astPkg, "", doc.AllDecls)
-	mappedDoc := make(map[string]string)
-	for _, t := range allDecls.Types {
-		mappedDoc[t.Name] = t.Doc
-	}
-	// Also extract function documentation
-	for _, f := range allDecls.Funcs {
-		mappedDoc[f.Name] = f.Doc
-	}
-	return mappedDoc, nil
-}
-
-// parseMethodsDocFromSyntax extracts method documentation, returning a map keyed by "TypeName.MethodName"
-func parseMethodsDocFromSyntax(pkg *packages.Package) (map[string]string, error) {
+// parseTypesDoc extracts documentation for types, functions, and methods.
+// Re-parses files with parser.ParseFile to ensure Doc fields are populated,
+// which is necessary for Go 1.27+ where pkg.Syntax may have nil Doc fields.
+func parseTypesDoc(pkg *packages.Package) (map[string]string, error) {
 	if len(pkg.GoFiles) == 0 {
 		return make(map[string]string), nil
 	}
 
-	// Re-parse files with parser.ParseFile to ensure Doc fields are populated
-	// pkg.Syntax may have nil Doc fields in some Go versions
-	//nolint:staticcheck // ast.Package is deprecated but required by go/doc.New
+	//nolint:staticcheck // ast.Package is deprecated but doc.NewFromFiles has stricter filename validation
 	astPkg := &ast.Package{
 		Name:  pkg.Name,
 		Files: make(map[string]*ast.File),
@@ -526,7 +469,6 @@ func parseMethodsDocFromSyntax(pkg *packages.Package) (map[string]string, error)
 	for _, filename := range pkg.GoFiles {
 		file, err := parser.ParseFile(pkg.Fset, filename, nil, parser.ParseComments)
 		if err != nil {
-			// Skip files that can't be parsed
 			continue
 		}
 		astPkg.Files[filename] = file
@@ -538,11 +480,17 @@ func parseMethodsDocFromSyntax(pkg *packages.Package) (map[string]string, error)
 
 	allDecls := doc.New(astPkg, "", doc.AllDecls)
 	mappedDoc := make(map[string]string)
+
 	for _, t := range allDecls.Types {
+		mappedDoc[t.Name] = t.Doc
 		for _, m := range t.Methods {
 			key := fmt.Sprintf("%s.%s", t.Name, m.Name)
 			mappedDoc[key] = m.Doc
 		}
+	}
+
+	for _, f := range allDecls.Funcs {
+		mappedDoc[f.Name] = f.Doc
 	}
 
 	return mappedDoc, nil

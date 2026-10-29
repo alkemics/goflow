@@ -35,15 +35,11 @@ func extractImports(typ types.Type) ([]goflow.Import, error) {
 		// Recursively unwrap the alias to get the underlying type
 		return extractImports(types.Unalias(typ))
 	case *types.Array:
-		// Unalias the element before recursing to handle aliases properly
-		return extractImports(types.Unalias(typ.Elem()))
+		return extractImports(typ.Elem())
 	case *types.Slice:
-		// Unalias the element before recursing to handle aliases properly
-		return extractImports(types.Unalias(typ.Elem()))
+		return extractImports(typ.Elem())
 	case *types.Pointer:
-		// Unalias the element before recursing to handle aliases properly
-		// This is critical for Go 1.22+ where types like json.RawMessage are aliases
-		return extractImports(types.Unalias(typ.Elem()))
+		return extractImports(typ.Elem())
 	case *types.Named:
 		pkg := typ.Obj().Pkg()
 		if pkg == nil {

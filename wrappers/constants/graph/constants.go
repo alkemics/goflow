@@ -26,7 +26,6 @@ func newConstants(id string) Constants {
 /*
  */
 func (g *Constants) Run() {
-
 	// __add_list outputs
 	var __add_list_aggregated []int
 
@@ -72,7 +71,6 @@ func (g *Constants) Run() {
 		run         func()
 		alreadyDone bool
 	}{
-
 		"__add_list": {
 			deps: map[string]struct{}{
 				igniteNodeID: {},

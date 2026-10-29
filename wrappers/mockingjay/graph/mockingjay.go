@@ -27,7 +27,6 @@ func newMockingjay(id string) Mockingjay {
 /*
  */
 func (g *Mockingjay) Run(ctx context.Context, a int, b int) (sum int) {
-
 	// __add_a outputs
 	var __add_a_aggregated int
 
@@ -63,7 +62,6 @@ func (g *Mockingjay) Run(ctx context.Context, a int, b int) (sum int) {
 		run         func()
 		alreadyDone bool
 	}{
-
 		"__add_a": {
 			deps: map[string]struct{}{
 				"inputs":     {},
@@ -102,7 +100,6 @@ func (g *Mockingjay) Run(ctx context.Context, a int, b int) (sum int) {
 				igniteNodeID: {},
 			},
 			run: func() {
-
 				__output_sum_builder_sum = add_sum
 				sum = __output_sum_builder_sum
 				done <- "__output_sum_builder"
@@ -129,7 +126,6 @@ func (g *Mockingjay) Run(ctx context.Context, a int, b int) (sum int) {
 				igniteNodeID: {},
 			},
 			run: func() {
-
 				var _mock []interface{}
 				if _mocks, ok := ctx.Value(mockingjay.ContextKey).(map[string][]interface{}); ok && _mocks != nil {
 					m, ok := _mocks["add"]
@@ -153,7 +149,6 @@ func (g *Mockingjay) Run(ctx context.Context, a int, b int) (sum int) {
 				igniteNodeID: {},
 			},
 			run: func() {
-
 				var _mock []interface{}
 				if _mocks, ok := ctx.Value(mockingjay.ContextKey).(map[string][]interface{}); ok && _mocks != nil {
 					m, ok := _mocks["inputs"]
@@ -181,7 +176,6 @@ func (g *Mockingjay) Run(ctx context.Context, a int, b int) (sum int) {
 				igniteNodeID:     {},
 			},
 			run: func() {
-
 				var _mock []interface{}
 				if _mocks, ok := ctx.Value(mockingjay.ContextKey).(map[string][]interface{}); ok && _mocks != nil {
 					m, ok := _mocks["print"]
@@ -191,7 +185,6 @@ func (g *Mockingjay) Run(ctx context.Context, a int, b int) (sum int) {
 				}
 
 				if _mock != nil {
-
 				} else {
 					nodes.PrinterCtx(__ctx_ctx, __print_values_aggregated)
 				}
